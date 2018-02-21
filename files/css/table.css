@@ -1,0 +1,87 @@
+img {
+	border: 0px;
+}
+
+table.edit {
+	font: 12px arial,sans-serif;
+	border-width: 2px;
+	border-spacing: 0px;
+	border-style: solid;
+	border-color: gray;
+	border-collapse: collapse;
+}
+
+table.edit th {
+	border-width: 1px;
+	padding: 3px 5px 3px 5px;
+	color: white;
+	border-style: none;
+	border-color: gray;
+	background-color: gray;
+}
+
+.section {
+	border-top: 2px solid white;
+}
+
+.heading {
+	border-bottom: 2px solid white;
+}
+
+table.edit tfoot td {
+	font-weight: bold;
+	border-width: 1px;
+	padding: 3px 5px 3px 5px;
+	color: white;
+	border-style: none;
+	border-color: gray;
+	background-color: gray;
+}
+
+table.edit td {
+	border-width: 1px;
+	padding: 3px 5px 3px 5px;
+	border-style: none;
+	border-color: gray;
+}
+
+.left {
+	text-align: left;
+}
+
+.center {
+	text-align: center;
+}
+
+.right {
+	text-align: right;
+}
+
+.bottom {
+	vertical-align: bottom;
+}
+
+.top {
+	vertical-align: top;
+}
+
+.odd {
+	background: #eaF4ff;
+}
+
+.nowrap {
+	white-space: nowrap;
+}
+
+.icon {
+	width: 20px;
+}
+
+table.new td {
+	border-width: 1px;
+	padding: 3px 5px 3px 5px;
+	border-style: none;
+	border-color: gray;
+	background-color: gray;
+}
+

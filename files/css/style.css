@@ -1,0 +1,169 @@
+body {
+    background-color: #88B3DA;
+}
+
+#container {
+    padding: 0 .5em;
+}
+
+#content {
+    width: 98%;
+    margin: 0 auto;
+    background-color: #ffffff;
+    padding: 15px 15px 60px 15px;
+    min-height: 400px;
+}
+
+#navbuttons {
+    float: right;
+    padding: 5px 8px;
+}
+
+#footer {
+    width: 98%;
+    margin: 0 auto;
+    background: #535353;
+    color: #c3c2c2;
+    padding: 10px 0px 5px 0px;
+    text-align: center;
+}
+
+.secure-menu hr {
+    margin: 5px 0px;
+}
+
+.secure-menu .list {
+     float: left;
+     margin-right: 50px;
+}
+
+.small-font {
+    font-size: small;
+}
+
+.buttons-right {
+    float: right;
+    text-align: right;
+}
+
+.title-top {
+    margin-top: 0px;
+    margin-bottom: 20px;
+}
+
+.table-fixed {
+    table-layout: fixed;
+}
+
+.left {
+	text-align: left;
+}
+
+.center {
+	text-align: center;
+}
+
+.right {
+	text-align: right;
+}
+
+.bottom {
+	vertical-align: bottom;
+}
+
+.top {
+	vertical-align: top;
+}
+
+.nowrap {
+	white-space: nowrap;
+}
+
+.margin-top {
+    margin-top: 20px;
+}
+
+.padding-height {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.attribute-row {
+	display: none;
+}
+
+.development-message {
+	display: inline-block;
+	font-size: 14px;
+	color: #D60606;
+	font-weight: bold;
+	vertical-align: middle;
+}
+
+/*****************************
+ * Header
+ *****************************/
+
+#site-title {
+    width: 98%;
+    margin: 0px auto 0px auto;
+    color: #FFFFFF;
+    text-align: left;
+    padding: 0;
+    background-color: #004875;
+    height: 50px;
+}
+
+#site-title div {
+    text-align: left;
+}
+
+#site-title h1 {
+    font-size: 1.6em;
+    line-height: 2.3em;
+    padding-left: 20px;
+    margin-top: -50px;
+}
+
+#gvsu-header-wrapper {
+	padding-bottom: 50px;
+}
+
+#gvsu-search_bar {
+	display: none;
+}
+
+#gvsu-header-wrapper #gvsu-header {
+	width: 95%;
+}
+
+#gvsu-cf_header.responsive {
+    padding-bottom: 60px;
+}
+
+#gvsu-cf_header.responsive #gvsu-cf_header-inner {
+    margin-left: 45px;
+}
+
+#gvsu-cf_header-search div {
+	display: none;
+}
+
+/*****************************
+ * END - Header
+ *****************************/
+
+@media screen and (max-width: 550px) {
+    #site-title h1 {
+        font-size: 1.2em;
+        line-height: 3.0em;
+    }
+}
+
+@media screen and (max-width: 450px) {
+    #site-title h1 {
+        font-size: 1.0em;
+        line-height: 1.3em;
+        padding-top: 6px;
+    }
+}
