@@ -1,19 +1,19 @@
-<cfset filesPath="C:\workspace\www\gvsu\Writing Portfolio\files\documents\"/>
+<!--<cfset local.filesPath=GetDirectoryFromPath(GetBaseTemplatePath()) & "files/documents">
+    <cfset local.filesPath=# replacenocase( "#local.filesPath#", "\", "/", "ALL")#> -->
 
-<cfquery datasource="DS_GVINTRAAD" name="deleteComments">
-       DELETE 
-       FROM wp_draft_comments
-       WHERE FILEID = '#url.fileid#'
-</cfquery>
+        <!--DELETE COMMENTS
+        <cfquery datasource="DS_GVINTRAAD" name="deleteComments">
+            DELETE FROM wp_draft_comments WHERE FILEID = '#url.fileid#'
+        </cfquery>-->
 
-<cfquery datasource="DS_GVINTRAAD" name="deleteDraft">
-       DELETE 
-       FROM writingdummy
-       WHERE FILEID = '#url.fileid#'
-</cfquery>
+        <cfquery datasource="DS_GVINTRAAD" name="deleteDraft">
+            UPDATE WP_PAPERS
+            SET ISDELETED = 1
+            WHERE FILEID = '#url.fileid#'
+        </cfquery>
 
-<cffile
-action = "delete"
-file = "#filesPath#/#session.user.ldap#/#filename#">
+        
+        <!--DELETE FILE
+        <cffile action="delete" file="#local.filesPath#/#user#/#filename#"> -->
 
-<cflocation url="info-index.htm">
+            <cflocation url="info-index.htm">

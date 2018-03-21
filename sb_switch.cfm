@@ -1,25 +1,16 @@
+<cfParam name="url.msg" default="" />
+
+<cfIf   listFindNoCase( sb.noSessionActions, sb.page ) EQ 0
+        AND listFindNoCase( sb.anySessionActions, sb.page ) EQ 0
+        AND listContainsNoCase( sb.defaultSessionPath, sb.page ) EQ 0
+        AND NOT isDefined("session.user.gnumber")>
+</cfIf>
+
 <cfSwitch expression="#sb.page#">
     <cfCase value="index">
         <cfParam name="url.error" default="" />
         <cfParam name="url.goto" default="" />
     </cfCase>
-    <cfCase value="login_post">
-        <cfParam name="url.goto" default="" />
-    </cfCase>
-    <cfCase value="menu">
-        <cfIf NOT isDefined("session.user.access")>
-            <cfSet sb.useRedirect ="loginerror.htm?error=user" />
-        </cfIf>
-    </cfCase>
-</cfSwitch>
+</cfSwitch>  
 
-<cfSet session.cfc = "Writing Portfolio.files.cfc" />
-
-<cfParam name="url.ds" default="DS_APPCFADVSTU" />
-<!--- 
-    To use a different datasource, add ?ds=DATASOURCE to the URL in the browser
-    Other Datasources:
-    DS_APPCFADVSTU_HRFI
-    DS_APPCFADVSTU
-    AdviseListStuMajor_Test
- --->
+<cfset local.filesPath = GetDirectoryFromPath(GetBaseTemplatePath()) & "files/documents"> <cfset local.filesPath = #replacenocase("#local.filesPath#","\","/","ALL")#>

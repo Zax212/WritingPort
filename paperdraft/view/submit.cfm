@@ -15,7 +15,7 @@
       <option value=5>Draft 5</option>
     </select><br>
 
-    <input type="hidden" name="user" value="<cfoutput>#session.user.ldap#</cfoutput>">
+    <input type="hidden" name="user" value="<cfoutput>#session.user.id#</cfoutput>">
     <input type="hidden" name="final" value=0>
 
     <label for="title">Title:</label><br>

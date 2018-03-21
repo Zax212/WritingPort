@@ -1,4 +1,3 @@
-
 <cfQuery datasource="DS_GVINTRAAD" name="qryAddComment">
     INSERT INTO WP_DRAFT_COMMENTS(
         COMMENTID,
@@ -10,7 +9,7 @@
         '<cfoutput>#createuuid()#</cfoutput>',
         '#form.fileid#',
         '#form.comment#',
-        '#session.user.ldap#',
+        '#session.user.id#',
         <cfoutput>#Now()#</cfoutput>)
 </cfQuery>
 <cfoutput>

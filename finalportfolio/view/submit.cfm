@@ -1,7 +1,7 @@
 <h2>Submit Final Portfolio</h2>
 <hr>
 <form name="portfolio" action="finalportfolio-submitted.htm" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="user" value="<cfoutput>#session.user.ldap#</cfoutput>">
+    <input type="hidden" name="user" value="<cfoutput>#session.user.id#</cfoutput>">
     <input type="hidden" name="final" value=1>
     
     <h4>Paper 1</h4>

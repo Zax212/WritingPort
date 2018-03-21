@@ -12,5 +12,5 @@
 </cfif>
 <br><br>
 <div class="col-md-4 margin-top">
-    <a href="finalportfolio-submit.htm#local.url#" class="btn btn-primary btn-block padding-height"><i class="glyphicon glyphicon-repeat"></i> Go Back</a>
+    <a href="finalportfolio-submit.htm#local.url#" class="btn btn-primary btn-block padding-height">Go Back</a>
 </div>

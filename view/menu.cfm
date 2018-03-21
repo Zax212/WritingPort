@@ -1,46 +1,54 @@
-<cfSet local.url = "" />
-<cfIf url.ds NEQ "DS_APPCFADVSTU">
-    <cfSet local.url = "?ds=#url.ds#" />
-</cfIf>
-<cfOutput>
-
-<div class="panel panel-info">
-    <cfif #session.user.type# EQ "facstaff">
-        <div class="panel-heading">You are signed in as Faculty</div>
-    <cfelseif #session.user.type# EQ "student">
-        <div class="panel-heading">You are signed in as a student</div>
-    </cfif>
-    
-    
+<h2>
+    Welcome to GVSU's Writing Portfolio System!
+</h2><br>
+<div class="panel panel-primary menu">
+    <div class="panel-heading">
+        GVSU - <strong>Writing Portfolio System</strong>
+    </div>
     <div class="panel-body">
+        <div class="col-sm-4">
+            <div class="list-group">
+                <div class="list-group-item list-group-item-success">
+                    User Information
+                </div>
 
-        <div class="col-md-4 margin-top">
-            <a href="info-index.htm#local.url#" class="btn btn-primary btn-block padding-height"><i class="glyphicon glyphicon-info-sign"></i> Information</a>
+                <a href="info-index.htm" class="list-group-item">
+                <span class="glyphicon glyphicon-user"></span> User Information</a>
+            </div>
         </div>
-        <div class="col-md-4 margin-top">
-            <a href="paperdraft-index.htm#local.url#" class="btn btn-primary btn-block padding-height"><i class="glyphicon glyphicon-pencil"></i> Paper Draft</a>
+
+        <div class="col-sm-4">
+            <div class="list-group">
+                <div class="list-group-item list-group-item-success">
+                    Paper's
+                </div>
+                <a href="paperdraft-index.htm" class="list-group-item">
+                <span class="glyphicon glyphicon-pencil"></span> View Draft's
+                        </a>
+                <a href="paperdraft-submit.htm" class="list-group-item">
+                <span class="glyphicon glyphicon-pencil"></span> Submit a Draft</a>
+                <a href="finalportfolio-index.htm" class="list-group-item">
+                <span class="glyphicon glyphicon-book"></span> Submit a Final Portfolio</a>
+            </div>
         </div>
-        <div class="col-md-4 margin-top">
-            <a href="finalportfolio-index.htm#local.url#" class="btn btn-primary btn-block padding-height"><i class="glyphicon glyphicon-folder-open"></i>  Final Portfolio</a>
-        </div>
-        <div class="col-md-4 margin-top">
-            <a href="tutorial-index.htm#local.url#" class="btn btn-primary btn-block padding-height"><i class="glyphicon glyphicon-info-sign"></i> Tutorial</a>
-        </div>
-        <cfif #session.user.type# EQ "facstaff">
-            <div class="col-md-4 margin-top">
-            <a href="professor-index.htm#local.url#" class="btn btn-primary btn-block padding-height"><i class="glyphicon glyphicon-lock"></i> Teacher Only</a>
-        </div>
-        </cfif>    
+
+        <cfif session.user.admin>
+            <div class="col-sm-4">
+                <div class="list-group">
+                    <div class="list-group-item list-group-item-success">
+                        Admin Control's
+                    </div>
+                    <a href="admin-draft.htm" class="list-group-item">
+                    <span class="glyphicon glyphicon-tower"></span> View all Draft's
+                        </a>
+                    <a href="admin-index.htm" class="list-group-item">
+                    <span class="glyphicon glyphicon-tower"></span> System Settings
+                        </a>
+                    <a href="admin-gradingGroup.htm" class="list-group-item">
+                    <span class="glyphicon glyphicon-tower"></span> View/Modify Grading Groups
+                        </a>
+                </div>
+            </div>
+        </cfif>
     </div>
 </div>
-
-</cfOutput>
-
-<cfIf listContainsNoCase("lindemae,snyderb,nelsnich", session.user.ldap) >
-    <div class="well">
-        <h5>Click on a link below to use a different datasource:</h5>
-        <a href="menu.htm?ds=DS_APPCFADVSTU">DS_APPCFADVSTU (default)</a><br>
-        <a href="menu.htm?ds=DS_APPCFADVSTU_HRFI">DS_APPCFADVSTU_HRFI</a><br>
-        <a href="menu.htm?ds=AdviseListStuMajor_Test">AdviseListStuMajor_Test</a><br>
-    </div>
-</cfIf>
