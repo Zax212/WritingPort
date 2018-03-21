@@ -1,1 +1,184 @@
-!function(a,b){"use strict";function c(c,g){var h=this;h.$el=a(c),h.el=c,h.id=e++,h.$window=a(b),h.$document=a(document),h.$el.bind("destroyed",a.proxy(h.teardown,h)),h.$clonedHeader=null,h.$originalHeader=null,h.isSticky=!1,h.hasBeenSticky=!1,h.leftOffset=null,h.topOffset=null,h.init=function(){h.$el.each(function(){var b=a(this);b.css("padding",0),h.$originalHeader=a("thead:first",this),h.$clonedHeader=h.$originalHeader.clone(),b.trigger("clonedHeader."+d,[h.$clonedHeader]),h.$clonedHeader.addClass("tableFloatingHeader"),h.$clonedHeader.css("display","none"),h.$originalHeader.addClass("tableFloatingHeaderOriginal"),h.$originalHeader.after(h.$clonedHeader),h.$printStyle=a('<style type="text/css" media="print">.tableFloatingHeader{display:none !important;}.tableFloatingHeaderOriginal{position:static !important;}</style>'),a("head").append(h.$printStyle)}),h.setOptions(g),h.updateWidth(),h.toggleHeaders(),h.bind()},h.destroy=function(){h.$el.unbind("destroyed",h.teardown),h.teardown()},h.teardown=function(){h.isSticky&&h.$originalHeader.css("position","static"),a.removeData(h.el,"plugin_"+d),h.unbind(),h.$clonedHeader.remove(),h.$originalHeader.removeClass("tableFloatingHeaderOriginal"),h.$originalHeader.css("visibility","visible"),h.$printStyle.remove(),h.el=null,h.$el=null},h.bind=function(){h.$scrollableArea.on("scroll."+d,h.toggleHeaders),h.isWindowScrolling||(h.$window.on("scroll."+d+h.id,h.setPositionValues),h.$window.on("resize."+d+h.id,h.toggleHeaders)),h.$scrollableArea.on("resize."+d,h.toggleHeaders),h.$scrollableArea.on("resize."+d,h.updateWidth)},h.unbind=function(){h.$scrollableArea.off("."+d,h.toggleHeaders),h.isWindowScrolling||(h.$window.off("."+d+h.id,h.setPositionValues),h.$window.off("."+d+h.id,h.toggleHeaders)),h.$scrollableArea.off("."+d,h.updateWidth)},h.toggleHeaders=function(){h.$el&&h.$el.each(function(){var b,c=a(this),d=h.isWindowScrolling?isNaN(h.options.fixedOffset)?h.options.fixedOffset.outerHeight():h.options.fixedOffset:h.$scrollableArea.offset().top+(isNaN(h.options.fixedOffset)?0:h.options.fixedOffset),e=c.offset(),f=h.$scrollableArea.scrollTop()+d,g=h.$scrollableArea.scrollLeft(),i=h.isWindowScrolling?f>e.top:d>e.top,j=(h.isWindowScrolling?f:0)<e.top+c.height()-h.$clonedHeader.height()-(h.isWindowScrolling?0:d);i&&j?(b=e.left-g+h.options.leftOffset,h.$originalHeader.css({position:"fixed","margin-top":0,left:b,"z-index":3}),h.leftOffset=b,h.topOffset=d,h.$clonedHeader.css("display",""),h.isSticky||(h.isSticky=!0,h.updateWidth()),h.setPositionValues()):h.isSticky&&(h.$originalHeader.css("position","static"),h.$clonedHeader.css("display","none"),h.isSticky=!1,h.resetWidth(a("td,th",h.$clonedHeader),a("td,th",h.$originalHeader)))})},h.setPositionValues=function(){var a=h.$window.scrollTop(),b=h.$window.scrollLeft();!h.isSticky||0>a||a+h.$window.height()>h.$document.height()||0>b||b+h.$window.width()>h.$document.width()||h.$originalHeader.css({top:h.topOffset-(h.isWindowScrolling?0:a),left:h.leftOffset-(h.isWindowScrolling?0:b)})},h.updateWidth=function(){if(h.isSticky){h.$originalHeaderCells||(h.$originalHeaderCells=a("th,td",h.$originalHeader)),h.$clonedHeaderCells||(h.$clonedHeaderCells=a("th,td",h.$clonedHeader));var b=h.getWidth(h.$clonedHeaderCells);h.setWidth(b,h.$clonedHeaderCells,h.$originalHeaderCells),h.$originalHeader.css("width",h.$clonedHeader.width())}},h.getWidth=function(c){var d=[];return c.each(function(c){var e,f=a(this);if("border-box"===f.css("box-sizing"))e=f.outerWidth();else{var g=a("th",h.$originalHeader);if("collapse"===g.css("border-collapse"))if(b.getComputedStyle)e=parseFloat(b.getComputedStyle(this,null).width);else{var i=parseFloat(f.css("padding-left")),j=parseFloat(f.css("padding-right")),k=parseFloat(f.css("border-width"));e=f.outerWidth()-i-j-k}else e=f.width()}d[c]=e}),d},h.setWidth=function(a,b,c){b.each(function(b){var d=a[b];c.eq(b).css({"min-width":d,"max-width":d})})},h.resetWidth=function(b,c){b.each(function(b){var d=a(this);c.eq(b).css({"min-width":d.css("min-width"),"max-width":d.css("max-width")})})},h.setOptions=function(c){h.options=a.extend({},f,c),h.$scrollableArea=a(h.options.scrollableArea),h.isWindowScrolling=h.$scrollableArea[0]===b},h.updateOptions=function(a){h.setOptions(a),h.unbind(),h.bind(),h.updateWidth(),h.toggleHeaders()},h.init()}var d="stickyTableHeaders",e=0,f={fixedOffset:0,leftOffset:0,scrollableArea:b};a.fn[d]=function(b){return this.each(function(){var e=a.data(this,"plugin_"+d);e?"string"==typeof b?e[b].apply(e):e.updateOptions(b):"destroy"!==b&&a.data(this,"plugin_"+d,new c(this,b))})}}(jQuery,window);
+/*! Copyright (c) 2011 by Jonas Mosbech - https://github.com/jmosbech/StickyTableHeaders
+    MIT license info: https://github.com/jmosbech/StickyTableHeaders/blob/master/license.txt */
+
+;(function ($, window, undefined) {
+    'use strict';
+
+    var name = 'stickyTableHeaders';
+    var defaults = {
+            fixedOffset: 0
+        };
+
+    function Plugin (el, options) {
+        // To avoid scope issues, use 'base' instead of 'this'
+        // to reference this class from internal events and functions.
+        var base = this;
+
+        // Access to jQuery and DOM versions of element
+        base.$el = $(el);
+        base.el = el;
+
+        // Listen for destroyed, call teardown
+        base.$el.bind('destroyed',
+            $.proxy(base.teardown, base));
+
+        // Cache DOM refs for performance reasons
+        base.$window = $(window);
+        base.$clonedHeader = null;
+        base.$originalHeader = null;
+
+        // Keep track of state
+        base.isSticky = false;
+        base.leftOffset = null;
+        base.topOffset = null;
+
+        base.init = function () {
+            base.options = $.extend({}, defaults, options);
+
+            base.$el.each(function () {
+                var $this = $(this);
+
+                // remove padding on <table> to fix issue #7
+                $this.css('padding', 0);
+
+                base.$originalHeader = $('thead:first', this);
+                base.$clonedHeader = base.$originalHeader.clone();
+
+                base.$clonedHeader.addClass('tableFloatingHeader');
+                base.$clonedHeader.css('display', 'none');
+
+                base.$originalHeader.addClass('tableFloatingHeaderOriginal');
+
+                base.$originalHeader.after(base.$clonedHeader);
+
+                base.$printStyle = $('<style type="text/css" media="print">' +
+                    '.tableFloatingHeader{display:none !important;}' +
+                    '.tableFloatingHeaderOriginal{position:static !important;}' +
+                    '</style>');
+                $('head').append(base.$printStyle);
+            });
+
+            base.updateWidth();
+            base.toggleHeaders();
+
+            base.bind();
+        };
+
+        base.destroy = function (){
+            base.$el.unbind('destroyed', base.teardown);
+            base.teardown();
+        };
+
+        base.teardown = function(){
+            $.removeData(base.el, 'plugin_' + name);
+            base.unbind();
+
+            base.$clonedHeader.remove();
+            base.$originalHeader.removeClass('tableFloatingHeaderOriginal');
+            base.$originalHeader.css('visibility', 'visible');
+            base.$printStyle.remove();
+
+            base.el = null;
+            base.$el = null;
+        };
+
+        base.bind = function(){
+            base.$window.on('scroll.' + name, base.toggleHeaders);
+            base.$window.on('resize.' + name, base.toggleHeaders);
+            base.$window.on('resize.' + name, base.updateWidth);
+        };
+
+        base.unbind = function(){
+            // unbind window events by specifying handle so we don't remove too much
+            base.$window.off('.' + name, base.toggleHeaders);
+            base.$window.off('.' + name, base.updateWidth);
+            base.$el.off('.' + name);
+            base.$el.find('*').off('.' + name);
+        };
+
+        base.toggleHeaders = function () {
+            base.$el.each(function () {
+                var $this = $(this);
+
+                var newTopOffset = isNaN(base.options.fixedOffset) ?
+                    base.options.fixedOffset.height() : base.options.fixedOffset;
+
+                var offset = $this.offset();
+                var scrollTop = base.$window.scrollTop() + newTopOffset;
+                var scrollLeft = base.$window.scrollLeft();
+
+                if ((scrollTop > offset.top) && (scrollTop < offset.top + $this.height() - base.$clonedHeader.height())) {
+                    var newLeft = offset.left - scrollLeft;
+                    if (base.isSticky && (newLeft === base.leftOffset) && (newTopOffset === base.topOffset)) {
+                        return;
+                    }
+
+                    base.$originalHeader.css({
+                        'position': 'fixed',
+                        'top': newTopOffset,
+                        'margin-top': 0,
+                        'left': newLeft,
+                        'z-index': 2 // #18: opacity bug
+                    });
+                    base.$clonedHeader.css('display', '');
+                    base.isSticky = true;
+                    base.leftOffset = newLeft;
+                    base.topOffset = newTopOffset;
+
+                    // make sure the width is correct: the user might have resized the browser while in static mode
+                    base.updateWidth();
+                }
+                else if (base.isSticky) {
+                    base.$originalHeader.css('position', 'static');
+                    base.$clonedHeader.css('display', 'none');
+                    base.isSticky = false;
+                }
+            });
+        };
+
+        base.updateWidth = function () {
+            if (!base.isSticky) {
+                return;
+            }
+            // Copy cell widths from clone
+            var $origHeaders = $('th,td', base.$originalHeader);
+            $('th,td', base.$clonedHeader).each(function (index) {
+                var width = $(this).width();
+                $origHeaders.eq(index).css({
+                    'min-width': width,
+                    'max-width': width
+                });
+            });
+
+            // Copy row width from whole table
+            base.$originalHeader.css('width', base.$clonedHeader.width());
+        };
+
+        base.updateOptions = function(options) {
+            base.options = $.extend({}, defaults, options);
+            base.updateWidth();
+            base.toggleHeaders();
+        };
+
+        // Run initializer
+        base.init();
+    }
+
+    // A plugin wrapper around the constructor,
+    // preventing against multiple instantiations
+    $.fn[name] = function ( options ) {
+        return this.each(function () {
+            var instance = $.data(this, 'plugin_' + name);
+            if (instance) {
+                if (typeof options === "string") {
+                    instance[options].apply(instance);
+                } else {
+                    instance.updateOptions(options);
+                }
+            } else if(options !== 'destroy') {
+                $.data(this, 'plugin_' + name, new Plugin( this, options ));
+            }
+        });
+    };
+
+})(jQuery, window);
