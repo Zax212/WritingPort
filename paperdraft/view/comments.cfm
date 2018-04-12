@@ -1,6 +1,6 @@
 <ul class="nav nav-tabs">
     <li class="nav-item">
-        <a href="paperdraft-index.htm">View Draft's</a>
+        <a href="paperdraft-index.htm?draft=-1">View Draft's</a>
     </li>
 </ul>
 <h3>Draft</h3>
@@ -53,4 +53,3 @@
 
 
         </cfoutput>
-        </div>

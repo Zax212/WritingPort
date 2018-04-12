@@ -39,68 +39,21 @@
     </cfif>
 </cfif>
 
-
-<cffile action="upload" fileField="form.file1" destination="#local.filesPath#/#form.user#" nameconflict="makeunique">
-    <cfQuery datasource="DS_GVINTRAAD" name="qryAddDraft">
-        INSERT INTO wp_papers (USERNAME,TITLE,DESCRIPTION,DRAFTNUM,FILENAME,FINAL,FILEID,isDeleted) VALUES ( '#form.user#', '#form.title1#', '#form.description1#', 0, '#CFFILE.SERVERFILE#', #form.final#,'
-        <cfoutput>#createuuid()#</cfoutput>',0)
+<!--Create portfolio uuid-->
+        <cfset portfolioid = #createuuid()# />
+        
+<cffile action="upload" fileField="form.file1" destination="#local.filesPath#/#form.user#" nameconflict="makeunique"accept="application/pdf">
+    <cfQuery datasource="DS_APPCFWRTPORTFOLIO" name="qryAddDraft1">
+        INSERT INTO GVSUOWNER.wp_papers (CREATEDBY,TITLE,DESCRIPTION,DRAFTNUM,FILENAME,PAPERID,PORTFOLIOID,CREATEDDT) VALUES ( '#form.user#', '#form.title1#', '#form.description1#', 0, '#CFFILE.SERVERFILE#','<cfoutput>#createuuid()#</cfoutput>','<cfoutput>#portfolioid#</cfoutput>',<cfoutput>#Now()#</cfoutput>)
     </cfQuery>
-
-    <cffile action="upload" fileField="form.file2" destination="#local.filesPath#/#form.user#" nameconflict="makeunique">
-        <cfQuery datasource="DS_GVINTRAAD" name="qryAddDraft">
-            INSERT INTO wp_papers (USERNAME,TITLE,DESCRIPTION,DRAFTNUM,FILENAME,FINAL,FILEID,isDeleted) VALUES ( '#form.user#', '#form.title2#', '#form.description2#', 0, '#CFFILE.SERVERFILE#', #form.final#,'
-            <cfoutput>#createuuid()#</cfoutput>',0)
-        </cfQuery>
-
-        <cffile action="upload" fileField="form.file3" destination="#local.filesPath#/#form.user#" nameconflict="makeunique">
-            <cfQuery datasource="DS_GVINTRAAD" name="qryAddDraft">
-                INSERT INTO wp_papers(USERNAME,TITLE,DESCRIPTION,DRAFTNUM,FILENAME,FINAL,FILEID,isDeleted) VALUES ( '#form.user#', '#form.title3#', '#form.description3#', 0, '#CFFILE.SERVERFILE#', #form.final#,'
-                <cfoutput>#createuuid()#</cfoutput>',0)
-            </cfQuery>
-
-            <h2>The Following Portfolio Was Submitted</h2>
-
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Title</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>
-                            <cfdump var="#form.user#">
-                        </td>
-                        <td>
-                            <cfdump var="#form.title1#">
-                        </td>
-                        <td>
-                            <cfdump var="#form.description1#">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <cfdump var="#form.user#">
-                        </td>
-                        <td>
-                            <cfdump var="#form.title2#">
-                        </td>
-                        <td>
-                            <cfdump var="#form.description2#">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <cfdump var="#form.user#">
-                        </td>
-                        <td>
-                            <cfdump var="#form.title3#">
-                        </td>
-                        <td>
-                            <cfdump var="#form.description3#">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <cffile action="upload" fileField="form.file2" destination="#local.filesPath#/#form.user#" nameconflict="makeunique"accept="application/pdf">
+    <cfQuery datasource="DS_APPCFWRTPORTFOLIO" name="qryAddDraft2">
+        INSERT INTO GVSUOWNER.wp_papers (CREATEDBY,TITLE,DESCRIPTION,DRAFTNUM,FILENAME,PAPERID,PORTFOLIOID,CREATEDDT) VALUES ( '#form.user#', '#form.title2#', '#form.description2#', 0, '#CFFILE.SERVERFILE#','<cfoutput>#createuuid()#</cfoutput>','<cfoutput>#portfolioid#</cfoutput>',<cfoutput>#Now()#</cfoutput>)
+    </cfQuery>
+        <cffile action="upload" fileField="form.file3" destination="#local.filesPath#/#form.user#" nameconflict="makeunique"accept="application/pdf">
+    <cfQuery datasource="DS_APPCFWRTPORTFOLIO" name="qryAddDraft3">
+        INSERT INTO GVSUOWNER.wp_papers (CREATEDBY,TITLE,DESCRIPTION,DRAFTNUM,FILENAME,PAPERID,PORTFOLIOID,CREATEDDT) VALUES ( '#form.user#', '#form.title3#', '#form.description3#', 0, '#CFFILE.SERVERFILE#','<cfoutput>#createuuid()#</cfoutput>','<cfoutput>#portfolioid#</cfoutput>',<cfoutput>#Now()#</cfoutput>)
+    </cfQuery>
+                        <!--Create portoflio row -->
+            <cfQuery datasource="DS_APPCFWRTPORTFOLIO" name="createPortfolio">
+                INSERT INTO GVSUOWNER.wp_portfolios (portfolioid,firstreaduserid,createdby,createddt) Values ('<cfoutput>#portfolioid#</cfoutput>','G01128406','#form.user#',<cfoutput>#Now()#</cfoutput>)</cfQuery>

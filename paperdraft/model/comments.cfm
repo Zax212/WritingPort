@@ -1,5 +1,5 @@
-<cfQuery datasource="DS_GVINTRAAD" name="qryComments">
+<cfQuery datasource="DS_APPCFWRTPORTFOLIO" name="qryComments">
     SELECT * 
-    FROM WP_DRAFT_COMMENTS
+    FROM GVSUOWNER.WP_DRAFT_COMMENTS
     ORDER BY CREATEDDT ASC
 </cfQuery>

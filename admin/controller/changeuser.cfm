@@ -1,4 +1,4 @@
-<cfif session.user.admin eq true>
+<cfif session.user.role eq 'ADMIN'>
     <cfset #session.user.id#=usr>
         <cflocation url="admin-index.htm">
             <cfelse>

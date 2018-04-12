@@ -1,5 +1,5 @@
-<cfQuery datasource="DS_GVINTRAAD" name="qryAddComment">
-    INSERT INTO WP_DRAFT_COMMENTS(
+<cfQuery datasource="DS_APPCFWRTPORTFOLIO" name="qryAddComment">
+    INSERT INTO GVSUOWNER.WP_DRAFT_COMMENTS(
         COMMENTID,
         FILEID,
         COMMENTMSG,

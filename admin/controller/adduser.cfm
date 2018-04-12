@@ -1,14 +1,14 @@
-<cfif session.user.admin eq true>
-    <cfQuery datasource ="DS_GVINTRAAD" name="qryCheckUser">
+<cfif session.user.role eq 'ADMIN'>
+    <cfQuery datasource ="DS_APPCFWRTPORTFOLIO" name="qryCheckUser">
         SELECT 1
-        FROM WP_USERS
+        FROM GVSUOWNER.WP_USERS
         WHERE ldap = '#usrname#'
     </cfQuery>
     
     <cfif #qryCheckUser.recordCount# eq 0>
-        <cfQuery datasource="DS_GVINTRAAD" name="qryAddUser">
+        <cfQuery datasource="DS_APPCFWRTPORTFOLIO" name="qryAddUser">
 
-                INSERT INTO WP_USERS(USERID, LDAP, MODIFIEDBY)  VALUES ('<cfoutput>#createuuid()#</cfoutput>','#usrname#','<cfoutput>#session.user.id#</cfoutput>')
+                INSERT INTO GVSUOWNER.WP_USERS(USERID, LDAP, MODIFIEDBY)  VALUES ('<cfoutput>#createuuid()#</cfoutput>','#usrname#','<cfoutput>#session.user.id#</cfoutput>')
         </cfQuery>
     </cfif>
 

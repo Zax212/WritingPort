@@ -1,10 +1,11 @@
-<cfset local.filesPath = GetDirectoryFromPath(GetBaseTemplatePath()) & "files/documents"> <cfset local.filesPath = #replacenocase("#local.filesPath#","\","/","ALL")#>
+<cfif session.user.role eq 'ADMIN'>
+    <cfset local.filesPath=G etDirectoryFromPath(GetBaseTemplatePath()) & "files/documents">
+        <cfset local.filesPath=# replacenocase( "#local.filesPath#", "\", "/", "ALL")#>
 
 
-    <cfquery datasource="DS_GVINTRAAD" name="deleteDraft">
-        UPDATE WP_PAPERS
-        SET ISDELETED = 1
-        WHERE FILEID = '#url.fileid#'
-    </cfquery>
+            <cfquery datasource="DS_APPCFWRTPORTFOLIO" name="deleteDraft">
+                UPDATE GVSUOWNER.WP_PAPERS SET ISDELETED = 1 WHERE PAPERID = '#url.paperid#'
+            </cfquery>
 
-<cflocation url="admin-draft.htm">
+            <cflocation url="admin-draft.htm">
+</cfif>

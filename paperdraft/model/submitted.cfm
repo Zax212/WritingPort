@@ -21,9 +21,9 @@
             </cfif>
         </cfif>
 
-        <cffile action="upload" fileField="form.uploadfile" destination="#local.filesPath#/#form.user#" nameconflict="makeunique">
+        <cffile action="upload" fileField="form.uploadfile" destination="#local.filesPath#/#form.user#" nameconflict="makeunique"accept="text/plain,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+            
 
-            <cfQuery datasource="DS_GVINTRAAD" name="qryAddDraft">
-                INSERT INTO wp_papers (USERNAME,TITLE,DESCRIPTION,DRAFTNUM,FILENAME,FINAL,FILEID,isDeleted) VALUES ( '#form.user#', '#form.title#', '#form.description#', #form.draftnum#, '#cffile.serverfile#', #form.final#,'
-                <cfoutput>#createuuid()#</cfoutput>',0)
+            <cfQuery datasource="DS_APPCFWRTPORTFOLIO" name="qryAddDraft">
+                INSERT INTO GVSUOWNER.wp_papers (CREATEDBY,TITLE,DESCRIPTION,DRAFTNUM,FILENAME,PAPERID,CREATEDDT) VALUES ( '#form.user#', '#form.title#', '#form.description#', #form.draftnum#, '#cffile.serverfile#', '<cfoutput>#createuuid()#</cfoutput>',<cfoutput>#Now()#</cfoutput>)
             </cfQuery>
