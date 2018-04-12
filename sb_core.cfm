@@ -1,20 +1,55 @@
 <cfSilent>
 	<!---
-		Switchboard Framework 1.0.6
-		June 8, 2015
+		Switchboard Framework 1.2.1
+		May 23, 2017
 		
 		http://switchboard.riaforge.org/
 		
 		Daniel Slaughter
 	--->
-	<cfHeader name="X-Powered-By" value="Switchboard Framework 1.0.6 (http://switchboard.riaforge.org/)" />
+	<cfHeader name="X-Powered-By" value="Switchboard Framework 1.2.1 (http://switchboard.riaforge.org/)" />
 	<!--- SET UP DEFAULT STRUCTURE. OVERRIDE IN INDEX.CFM --->
-	<cfSet sb = structNew() />
+	<cfParam name="sb" default="#structNew()#" />
+	<cfScript>
+		sb.func = {
+			"cacheClear": function (id=cacheGetAllIds()) {
+				if (!isArray(id)) {
+					id = listToArray(id);
+				}
+				cacheRemove(id);
+				return true;
+			},
+			"cacheId": function () {
+				return hash(cgi.script_name & "?" & cgi.query_string);
+			},
+			"cacheMetaData": function (id=cacheGetAllIds()) {
+				var local = structNew();
+				local.cacheMetaDataArray = arrayNew(1);
+				if (!isArray(id)) {
+					id = listToArray(id);
+				}
+				local.length = arrayLen(id);
+				for (local.loopIndex=1; local.loopIndex<=local.length; local.loopIndex++) {
+					arrayAppend(local.cacheMetaDataArray, cacheGetMetadata(id[local.loopIndex]));
+					local.cacheMetaDataArray[local.loopIndex]["cacheId"] = id[local.loopIndex];
+				}
+				return local.cacheMetaDataArray;
+			}
+		};
+	</cfScript>
+	<cfCache action="get" id="#sb.func.cacheId()#" name="sb.content">
+	<cfIf isDefined("sb.content")>
+		<!--- CACHE CONTROL --->
+		<cfSet variables.metaData = sb.func.cacheMetaData(sb.func.cacheId())[1] />
+		<cfHeader name="Expires" value="#getHTTPTimeString(variables.metaData.lastUpdated+variables.metaData.timespan)#" />
+		<cfHeader name="Cache-Control" value="max-age=#variables.metaData.timespan#,public" />
+	<cfElse>
 	<!--- SET UP DEFAULT VARIABLES. OVERRIDE IN SB_SETTINGS.CFM --->
 	<cfParam name="sb.defaultPage" default="index" />
 	<cfParam name="sb.defaultCircuit" default="" />
 	<cfParam name="sb.title" default="" />
 	<cfParam name="sb.content" default="" />
+		<cfParam name="sb.circuit" default="" />
 	<cfParam name="sb.sessionCheck" default="" />
 	<cfParam name="sb.defaultSessionPath" default="" />
 	<cfParam name="sb.defaultNoSessionPath" default="" />
@@ -26,6 +61,10 @@
 	<cfParam name="sb.useRedirect" default="" />
 	<cfParam name="sb.useTemplate"default="true" />
 	<cfParam name="sb.useForm" default="" />
+		<cfParam name="sb.useCompress" default="false" />
+		<cfParam name="sb.useCache" default="false" />
+		<cfParam name="sb.useSkeleton" default="false" />
+		<cfParam name="sb.cacheTimeout" default="600" type="integer" />
 	<cfParam name="sb.errorToEmail" default="" />
 	<cfParam name="sb.errorFromEmail" default="error@#cgi.http_host#" />
 	<cfParam name="sb.errorPage" default="error" />
@@ -34,24 +73,30 @@
 	<cfParam name="sb.isHomepage" default="false" />
 	<cfParam name="sb.isDevelopment" default="false" />
 	<cfParam name="sb.developmentServers" default="" />
-	<cfParam name="sb.compress" default="false" />
+		<cfParam name="sb.robots" default="index,follow" />
+		<cfParam name="sb.directoryOffset" default="" />
+		<cfParam name="sb.directorySkeleton" default="" />
 	<cfTry>
 		<!--- INCLUDE ROOT'S SETTINGS FILE --->
-		<cfIf fileExists(expandPath("sb_settings.cfm"))>
-			<cfInclude template="sb_settings.cfm" />
+			<cfIf fileExists(expandPath("#sb.directorySkeleton#sb_settings.cfm"))>
+				<cfInclude template="#sb.directorySkeleton#sb_settings.cfm" />
+			</cfIf>
+			<cfIf sb.directorySkeleton NEQ sb.directoryOffset AND fileExists(expandPath("#sb.directoryOffset#sb_settings.cfm"))>
+				<cfInclude template="#sb.directoryOffset#sb_settings.cfm" />
 		</cfIf>
 		<!--- SET UP THE PATH'S ARRAY --->
 		<cfParam name="url.sb_path" default="#sb.defaultPage#" />
 		<cfParam name="sb.url" default="#url.sb_path#" />
-		<cfParam name="url.action" default="#sb.defaultPage#" />
-		<cfSet sb.url = lCase(sb.url) />
-		<cfSet url.action = lCase(url.action) />
+			<cfSet sb.url = reReplace(lCase(sb.url), "[^a-z0-9\-_]*", "", "all") />
 		<!--- MOD-REWRITE (.htaccess) --->
 		<cfSet sb.routing = listToArray(sb.url, "-") />
 		<cfSet sb.path = sb.url />
 		<!--- SET THE NUMBER OF CURCUITS ( -1 FOR THE PAGE ) --->
 		<cfSet sb.circuitCount = arrayLen(sb.routing)-1 />
-		<cfIf sb.circuitCount EQ 0>
+			<cfIf sb.circuitCount LT 0>
+				<!--- THIS CASE CAN HAPPEN IF THE URL IS "/-.htm" --->
+				<cfSet sb.error = "NOPAGE" />
+			<cfElseIf sb.circuitCount EQ 0>
 			<cfSet sb.circuit = sb.defaultCircuit />
 			<cfSet sb.page = sb.routing[1] />
 		<cfElse>
@@ -66,18 +111,23 @@
 		<cfSet sb.remainingCircuit = "" />
 		<cfLoop list="#sb.circuit#" delimiters="/" index="sb.loopIndex">
 			<cfSet sb.remainingCircuit = listAppend(sb.remainingCircuit, sb.loopIndex, "/") & "/" />
-			<cfIf fileExists(expandPath("#sb.remainingCircuit#sb_core.cfm"))>
+				<cfIf fileExists(expandPath("#sb.directoryOffset##sb.remainingCircuit#sb_core.cfm"))>
 				<cfSet sb.error = "CORE" />
 			</cfIf>
 		</cfLoop>
-		<cfIf sb.error NEQ "CORE">
+			<cfIf NOT len(sb.error)>
 			<cfSet sb.includedFiles = 0 />
 			<!--- INCLUDE SETTINGS, IF NOT ROOT --->
 			<cfSet sb.remainingCircuit = "" />
 			<cfLoop list="#sb.circuit#" delimiters="/" index="sb.loopIndex">
 				<cfSet sb.remainingCircuit = listAppend(sb.remainingCircuit, sb.loopIndex, "/") & "/"  />
-				<cfIf len(sb.remainingCircuit) AND fileExists(expandPath("#sb.remainingCircuit#sb_settings.cfm"))>				
-					<cfInclude template="#sb.remainingCircuit#sb_settings.cfm" />
+					<cfIf len(sb.remainingCircuit)>
+						<cfIf fileExists(expandPath("#sb.directorySkeleton##sb.remainingCircuit#sb_settings.cfm"))>
+							<cfInclude template="#sb.directorySkeleton##sb.remainingCircuit#sb_settings.cfm" />
+						</cfIf>
+						<cfIf sb.directorySkeleton NEQ sb.directoryOffset AND fileExists(expandPath("#sb.directoryOffset##sb.remainingCircuit#sb_settings.cfm"))>				
+							<cfInclude template="#sb.directoryOffset##sb.remainingCircuit#sb_settings.cfm" />
+						</cfIf>
 				</cfIf>
 			</cfLoop>
 			<!--- DETERMINE HOMEPAGE --->
@@ -117,9 +167,12 @@
 	            <cfAbort />
 			</cfIf>
 			<!--- INCLUDE SWITCH --->
-			<cfIf fileExists(expandPath("#sb.circuit#sb_switch.cfm"))>
-				<cfInclude template="#sb.circuit#sb_switch.cfm" />
+				<cfIf fileExists(expandPath("#sb.directoryOffset##sb.circuit#sb_switch.cfm"))>
+					<cfInclude template="#sb.directoryOffset##sb.circuit#sb_switch.cfm" />
+				<cfElseIf sb.useSkeleton AND sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton##sb.circuit#sb_switch.cfm"))>
+					<cfInclude template="#sb.directorySkeleton##sb.circuit#sb_switch.cfm" />
 			</cfIf>
+				<cfIf NOT len(sb.error)>
 			<!--- USE FORM LOGIC --->
 			<cfIf len(sb.useForm) AND cgi.request_method NEQ "POST">
 				<cfLocation url="#sb.useForm#" addtoken="false" />
@@ -127,15 +180,25 @@
 			</cfIf>
 	        <cfSaveContent variable="sb.content">
 	            <!--- INCLUDE CONTROLLER FILE --->
-	            <cfIf sb.useController AND fileExists(expandPath("#sb.circuit#controller/#sb.page#.cfm"))>
-	                <cfInclude template="#sb.circuit#controller/#sb.page#.cfm" />
+						<cfIf sb.useController>
+							<cfIf fileExists(expandPath("#sb.directoryOffset##sb.circuit#controller/#sb.page#.cfm"))>
+								<cfInclude template="#sb.directoryOffset##sb.circuit#controller/#sb.page#.cfm" />
+								<cfSet sb.includedFiles = sb.includedFiles + 1 />
+							<cfElseIf sb.useSkeleton AND sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton##sb.circuit#controller/#sb.page#.cfm"))>
+								<cfInclude template="#sb.directorySkeleton##sb.circuit#controller/#sb.page#.cfm" />
 	                <cfSet sb.includedFiles = sb.includedFiles + 1 />
 	            </cfIf>
+						</cfIf>
 	            <!--- INCLUDE MODEL FILE --->
-	            <cfIf sb.useModel AND fileExists(expandPath("#sb.circuit#model/#sb.page#.cfm"))>
-	                <cfInclude template="#sb.circuit#model/#sb.page#.cfm" />
+						<cfIf sb.useModel>
+							<cfIf fileExists(expandPath("#sb.directoryOffset##sb.circuit#model/#sb.page#.cfm"))>
+								<cfInclude template="#sb.directoryOffset##sb.circuit#model/#sb.page#.cfm" />
+								<cfSet sb.includedFiles = sb.includedFiles + 1 />
+							<cfElseIf sb.useSkeleton AND sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton##sb.circuit#model/#sb.page#.cfm"))>
+								<cfInclude template="#sb.directorySkeleton##sb.circuit#model/#sb.page#.cfm" />
 	                <cfSet sb.includedFiles = sb.includedFiles + 1 />
 	            </cfIf>
+						</cfIf>
 	        </cfSaveContent>
 	        <cfSaveContent variable="sb.content">
 	            <cfIf sb.isDevelopment AND len(trim(sb.content))>
@@ -147,9 +210,14 @@
 	                </div>
 	            </cfIf>
 	            <!--- INCLUDE VIEW FILE --->
-	            <cfIf sb.useView AND fileExists(expandPath("#sb.circuit#view/#sb.page#.cfm"))>
-	                <cfInclude template="#sb.circuit#view/#sb.page#.cfm" />
+						<cfIf sb.useView>
+							<cfIf fileExists(expandPath("#sb.directoryOffset##sb.circuit#view/#sb.page#.cfm"))>
+								<cfInclude template="#sb.directoryOffset##sb.circuit#view/#sb.page#.cfm" />
 	                <cfSet sb.includedFiles = sb.includedFiles + 1 />
+							<cfElseIf sb.useSkeleton AND sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton##sb.circuit#view/#sb.page#.cfm"))>
+								<cfInclude template="#sb.directorySkeleton##sb.circuit#view/#sb.page#.cfm" />
+								<cfSet sb.includedFiles = sb.includedFiles + 1 />
+							</cfIf>
 	            </cfIf>
 	        </cfSaveContent>
 			<cfSet sb.remainingCircuit = sb.circuit />
@@ -171,24 +239,35 @@
 				<cfAbort />
 			</cfIf>
 			<!--- LOOP THROUGH CIRCUITS BACKWARDS TO INCLUDE TEMPLATES --->
-			<cfIf sb.useTemplate>
 				<cfLoop from="#sb.circuitCount#" to="1" step="-1" index="sb.loopIndex">
-					<cfIf fileExists(expandPath("#sb.remainingCircuit#sb_template.cfm"))>
-						<cfSaveContent variable="sb.newContent">
-							<cfInclude template="#sb.remainingCircuit#sb_template.cfm" />
+						<cfIf sb.useTemplate>
+							<cfIf fileExists(expandPath("#sb.directoryOffset##sb.remainingCircuit#sb_template.cfm"))>
+								<cfSaveContent variable="sb.content">
+									<cfInclude template="#sb.directoryOffset##sb.remainingCircuit#sb_template.cfm" />
+								</cfSaveContent>
+								<cfSet sb.content = trim(sb.content) />
+							<cfElseIf sb.useSkeleton AND sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton##sb.remainingCircuit#sb_template.cfm"))>
+								<cfSaveContent variable="sb.content">
+									<cfInclude template="#sb.directorySkeleton##sb.remainingCircuit#sb_template.cfm" />
 						</cfSaveContent>
-						<cfSet sb.content = trim(sb.newContent) />
+								<cfSet sb.content = trim(sb.content) />
+							</cfIf>
 					</cfIf>
 					<cfSet sb.remainingCircuit = listDeleteAt(sb.remainingCircuit, sb.loopIndex, "/") & "/" />
 				</cfLoop>
-			</cfIf>
-			<!--- INCLUDE HOME TEMPLATE --->	
+					<!--- INCLUDE ROOT TEMPLATE --->
 			<cfIf sb.useTemplate>
-				<cfIf fileExists(expandPath("sb_template.cfm"))>
-					<cfSaveContent variable="sb.newContent">
-						<cfInclude template="sb_template.cfm" />
+						<cfIf fileExists(expandPath("#sb.directoryOffset#sb_template.cfm"))>
+							<cfSaveContent variable="sb.content">
+								<cfInclude template="#sb.directoryOffset#sb_template.cfm" />
+							</cfSaveContent>
+							<cfSet sb.content = trim(sb.content) />
+						<cfElseIf sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton#sb_template.cfm"))>
+							<cfSaveContent variable="sb.content">
+								<cfInclude template="#sb.directorySkeleton#sb_template.cfm" />
 					</cfSaveContent>
-					<cfSet sb.content = trim(sb.newContent) />
+							<cfSet sb.content = trim(sb.content) />
+						</cfIf>
 				</cfIf>
 			</cfIf>
 		</cfIf>
@@ -199,34 +278,37 @@
 	</cfTry>
 	<!--- HANDLE ERRRORS IF THEY OCCUR --->
 	<cfIf len(sb.error)>
+			<cfSet sb.robots = "noindex,nofollow" />
 		<cfSet sb.includedErrorFiles = 0 />
 		<cfTry>
-			<cfIf fileExists(expandPath("#sb.circuit#controller/#sb.errorPage#.cfm"))>
+				<cfIf fileExists(expandPath("#sb.directoryOffset#controller/#sb.errorPage#.cfm"))>
 				<cfSet sb.includedErrorFiles = sb.includedErrorFiles + 1 />
-				<cfInclude template="#sb.circuit#controller/#sb.errorPage#.cfm" />
-			<cfElseIf fileExists(expandPath("controller/#sb.errorPage#.cfm"))>
+					<cfInclude template="#sb.directoryOffset#controller/#sb.errorPage#.cfm" />
+				<cfElseIf sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton#controller/#sb.errorPage#.cfm"))>
 				<cfSet sb.includedErrorFiles = sb.includedErrorFiles + 1 />
-				<cfInclude template="controller/#sb.errorPage#.cfm" />
+					<cfInclude template="#sb.directorySkeleton#controller/#sb.errorPage#.cfm" />
 			</cfIf>
-			<cfIf fileExists(expandPath("#sb.circuit#model/error.cfm"))>
+				<cfIf fileExists(expandPath("#sb.directoryOffset#model/#sb.errorPage#.cfm"))>
 				<cfSet sb.includedErrorFiles = sb.includedErrorFiles + 1 />
-				<cfInclude template="#sb.circuit#model/#sb.errorPage#.cfm" />
-			<cfElseIf fileExists(expandPath("model/#sb.errorPage#.cfm"))>
+					<cfInclude template="#sb.directoryOffset#model/#sb.errorPage#.cfm" />
+				<cfElseIf sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton#model/#sb.errorPage#.cfm"))>
 				<cfSet sb.includedErrorFiles = sb.includedErrorFiles + 1 />
-				<cfInclude template="model/#sb.errorPage#.cfm" />
+					<cfInclude template="#sb.directorySkeleton#model/#sb.errorPage#.cfm" />
 			</cfIf>
 			<cfSaveContent variable="sb.content">
-				<cfIf fileExists(expandPath("#sb.circuit#view/error.cfm"))>
+					<cfIf fileExists(expandPath("#sb.directoryOffset#view/#sb.errorPage#.cfm"))>
 					<cfSet sb.includedErrorFiles = sb.includedErrorFiles + 1 />
-					<cfInclude template="#sb.circuit#view/#sb.errorPage#.cfm" />
-				<cfElseIf fileExists(expandPath("view/#sb.errorPage#.cfm"))>
+						<cfInclude template="#sb.directoryOffset#view/#sb.errorPage#.cfm" />
+					<cfElseIf sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton#view/#sb.errorPage#.cfm"))>
 					<cfSet sb.includedErrorFiles = sb.includedErrorFiles + 1 />
-					<cfInclude template="view/#sb.errorPage#.cfm" />
+						<cfInclude template="#sb.directorySkeleton#view/#sb.errorPage#.cfm" />
 				</cfIf>
 			</cfSaveContent>
 			<cfCatch>
 				<!--- IGNORED --->
 				<cfSet sb.includedErrorFiles = 0 />
+					<cfSet sb.error = "CATCH" />
+					<cfSet sb.cfCatch = cfCatch />
 			</cfCatch>
 		</cfTry>
 		<cfIf NOT sb.includedErrorFiles>
@@ -239,33 +321,52 @@
 			<cfSet sb.content = trim(sb.content) />
 		</cfIf>
 		<cfTry>
-			<!--- LOOP THROUGH CIRCUITS BACKWARDS TO INCLUDE TEMPLATES --->
-			<cfIf sb.useTemplate>
 				<cfSet sb.remainingCircuit = sb.circuit />
+				<!--- LOOP THROUGH CIRCUITS BACKWARDS TO INCLUDE TEMPLATES --->
 				<cfLoop from="#sb.circuitCount#" to="1" step="-1" index="sb.loopIndex">
-					<cfIf fileExists(expandPath("#sb.remainingCircuit#sb_template.cfm"))>
-						<cfSaveContent variable="sb.newContent">
-							<cfInclude template="#sb.remainingCircuit#sb_template.cfm" />
+					<cfIf sb.useTemplate>
+						<cfIf fileExists(expandPath("#sb.directoryOffset##sb.remainingCircuit#sb_template.cfm"))>
+							<cfSaveContent variable="sb.content">
+								<cfInclude template="#sb.directoryOffset##sb.remainingCircuit#sb_template.cfm" />
+							</cfSaveContent>
+							<cfSet sb.content = trim(sb.content) />
+						<cfElseIf sb.useSkeleton AND sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton##sb.remainingCircuit#sb_template.cfm"))>
+							<cfSaveContent variable="sb.content">
+								<cfInclude template="#sb.directorySkeleton##sb.remainingCircuit#sb_template.cfm" />
 						</cfSaveContent>
-						<cfSet sb.content = trim(sb.newContent) />
+							<cfSet sb.content = trim(sb.content) />
+						</cfIf>
 					</cfIf>
 					<cfSet sb.remainingCircuit = listDeleteAt(sb.remainingCircuit, sb.loopIndex, "/") & "/" />
 				</cfLoop>
-			</cfIf>
-			<!--- INCLUDE HOME TEMPLATE --->
-			<cfIf sb.useTemplate AND fileExists(expandPath("sb_template.cfm"))>
-				<cfSaveContent variable="sb.newContent">
-					<cfInclude template="sb_template.cfm" />
+				<!--- INCLUDE ROOT TEMPLATE --->
+				<cfIf sb.useTemplate>
+					<cfIf fileExists(expandPath("#sb.directoryOffset#sb_template.cfm"))>
+						<cfSaveContent variable="sb.content">
+							<cfInclude template="#sb.directoryOffset#sb_template.cfm" />
+						</cfSaveContent>
+						<cfSet sb.content = trim(sb.content) />
+					<cfElseIf sb.directoryOffset NEQ sb.directorySkeleton AND fileExists(expandPath("#sb.directorySkeleton#sb_template.cfm"))>
+						<cfSaveContent variable="sb.content">
+							<cfInclude template="#sb.directorySkeleton#sb_template.cfm" />
 				</cfSaveContent>
-				<cfSet sb.content = trim(sb.newContent) />
+						<cfSet sb.content = trim(sb.content) />
+					</cfIf>
 			</cfIf>
 			<cfCatch>
 				<!--- IGNORED --->
 			</cfCatch>
 		</cfTry>
 	</cfIf>
-	<cfIf sb.compress>
+		<cfIf sb.useCompress>
 		<cfSet sb.content = reReplace(sb.content, "[\t\s\n]{1,}", " ", "all") />
 	</cfIf>
 	<cfSet sb.content = trim(sb.content) />
+		<cfIf NOT len(sb.error) AND sb.useCache>
+			<!--- THERE WERE NOT ANY ERRORS, SO CACHE --->
+			<cfCache action="put" id="#sb.func.cacheId()#" value="#sb.content#" timespan="#createTimeSpan(0, 0, 0, sb.cacheTimeout)#" idletime="#createTimeSpan(0, 0, 0, sb.cacheTimeout)#">
+			<cfHeader name="Expires" value="#getHTTPTimeString(now()+sb.cacheTimeout/86400)#" />
+			<cfHeader name="Cache-Control" value="max-age=#sb.cacheTimeout#,public" />
+		</cfIf>
+	</cfIf>
 </cfSilent><cfOutput>#sb.content#</cfOutput>

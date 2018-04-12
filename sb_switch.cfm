@@ -1,11 +1,5 @@
 <cfParam name="url.msg" default="" />
 
-<cfIf   listFindNoCase( sb.noSessionActions, sb.page ) EQ 0
-        AND listFindNoCase( sb.anySessionActions, sb.page ) EQ 0
-        AND listContainsNoCase( sb.defaultSessionPath, sb.page ) EQ 0
-        AND NOT isDefined("session.user.gnumber")>
-</cfIf>
-
 <cfSwitch expression="#sb.page#">
     <cfCase value="index">
         <cfParam name="url.error" default="" />
